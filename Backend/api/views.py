@@ -17,7 +17,11 @@ from rest_framework import generics
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework_simplejwt.tokens import RefreshToken
-
+import os
+import joblib
+import re
+import numpy as np
+import pandas as pd
 from django.shortcuts import render, redirect
 from django.http import Http404
 
@@ -34,6 +38,62 @@ from .models import *
 from .pusher import pusher_client
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+# recommendation system
+MODEL= os.path.join(os.path.dirname(__file__), 'model', 'model.pkl')
+VECTORIZER = os.path.join(os.path.dirname(__file__), 'model', 'vectorizer.pkl')
+
+model = joblib.load(MODEL)
+vectorizer = joblib.load(VECTORIZER)
+
+DATASET_PATH = os.path.join(os.path.dirname(__file__), 'fypdataset.csv')
+df = pd.read_csv(DATASET_PATH)
+
+# Function to clean the input text
+def clean_data(text):
+    # Implement text cleaning logic (lowercase, remove special characters, etc.)
+    text = re.sub(r'[^a-zA-Z0-9 ]', '', text.lower())
+    return text
+
+@api_view(['POST'])
+def recommend(request):
+    # Accept both topic and description
+    topic = request.data.get("topic", "")
+    description = request.data.get("description", "")
+    user_input = f"{topic} {description}".strip()
+
+    if not user_input:
+        return Response({"error": "Both topic and description are empty."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Clean and vectorize
+    cleaned_text = clean_data(user_input)
+    transformed_text = vectorizer.transform([cleaned_text])
+
+    # Predict subject
+    probabilities = model.predict_proba(transformed_text)[0]
+    recommended_subject = model.classes_[probabilities.argmax()]
+    confidence = probabilities.max()
+
+    # Get videos related to subject
+    related_videos = df[df['Topic'].str.contains(recommended_subject, case=False, na=False)]
+
+    # Limit to top 20 videos and return both title and URL
+    video = []
+    for _, row in related_videos.head(20).iterrows():
+        video.append({
+            "title": row.get("Title", "No Title"),
+            "url": row.get("URL", "")
+        })
+
+    return Response({
+        "recommended_subject": recommended_subject,
+        "confidence": round(float(confidence), 2),
+        "videos": video,
+        "message": "Results regardless of confidence."
+    }, status=status.HTTP_200_OK)
+
+
+# message
 
 class MessageAPIView(APIView):
 
@@ -323,7 +383,7 @@ class DashboardPostCreate(generics.CreateAPIView):
         description = request.data.get('description')
         tags = request.data.get('tags')
         category_id = request.data.get('category')
-        post_status = request.data.get('post_status')
+        post_status = request.data.get('post_status', 'Active')
         tagged_users_ids = request.data.get('tagged_users', [])
 
         try:
@@ -345,6 +405,10 @@ class DashboardPostCreate(generics.CreateAPIView):
             category=category,
             status=post_status
         )
+
+
+        post.profile = user.profile
+        post.save()
 
         if tagged_users_ids:
             tagged_users = User.objects.filter(id__in=tagged_users_ids)

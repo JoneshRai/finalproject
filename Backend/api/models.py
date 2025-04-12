@@ -122,6 +122,8 @@ class Post(models.Model):
         verbose_name_plural = "Post"
 
     def save(self, *args, **kwargs):
+        if not self.profile and self.user:  
+            self.profile = self.user.profile  # Assign profile if missing
         if not self.slug:
             self.slug = slugify(self.title) + "-" + shortuuid.uuid()[:2]
         super(Post, self).save(*args, **kwargs)

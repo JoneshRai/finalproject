@@ -59,5 +59,7 @@ urlpatterns = [
     path('DashboardPostCreate/',DashboardPostCreate.as_view(),name='DashboardPostCreate'),
     path('DashboardUpdatePost/',DashboardUpdatePost.as_view(),name='DashboardUpdatePost'),
 
+    path('Ai/', views.recommend, name='recommend')
+
 
 ]
