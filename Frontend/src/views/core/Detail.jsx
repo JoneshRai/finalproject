@@ -5,21 +5,16 @@ import { Link, useParams } from "react-router-dom";
 import apiInstance from "../../utils/axios";
 import Moment from "../../plugin/Moment";
 import Toast from "../../plugin/Toast";
-import useUserData from "../../plugin/useUserData"; // Import the hook to get logged-in user data
+import useUserData from "../../plugin/useUserData";
 
 function Detail() {
     const [post, setPost] = useState([]);
     const [tags, setTags] = useState([]);
-    const [createComment, setCreateComment] = useState({ comment: "" }); // Only the comment field is needed
+    const [createComment, setCreateComment] = useState({ comment: "" });
     const [taggedUsers, setTaggedUsers] = useState([]);
-
     const param = useParams();
-    const userData = useUserData(); // Get logged-in user data
+    const userData = useUserData();
 
-
-    // Debugging: Check if userData is undefined
-    console.log("User Data:", userData);
-    // Fetch post details
     const fetchPost = async () => {
         const response = await apiInstance.get(`/postdetail/${param.slug}/`);
         setPost(response.data);
@@ -42,35 +37,29 @@ function Detail() {
     const handleCreateCommentSubmit = async (e) => {
         e.preventDefault();
 
-        // Check if the post exists
         if (!post?.id) {
             Toast("error", "Post not found.", "");
             return;
         }
 
-        // Ensure the user is logged in
-        if (!userData || !userData.email) { 
+        if (!userData || !userData.email) {
             Toast("error", "You must be logged in to post a comment.", "");
             return;
         }
 
         const jsonData = {
             post_id: post?.id,
-            name: userData.full_name, // Use logged-in user's name
-            email: userData.email, // Use logged-in user's email
+            name: userData.full_name,
+            email: userData.email,
             comment: createComment.comment,
         };
 
         try {
             const response = await apiInstance.post(`viewcomment/`, jsonData);
-            console.log(response);
-
             if (response.status === 201) {
                 Toast("success", "Comment Posted.", "");
-                fetchPost(); // Fetch the updated post data
-                setCreateComment({
-                    comment: "", // Clear the comment field
-                });
+                fetchPost();
+                setCreateComment({ comment: "" });
             } else {
                 Toast("error", "Failed to post comment.", "");
             }
@@ -87,7 +76,6 @@ function Detail() {
         };
 
         const response = await apiInstance.post(`likepost/`, json);
-        console.log(response.data);
         Toast("success", response.data.message);
         fetchPost();
     };
@@ -103,7 +91,6 @@ function Detail() {
                                 <i className="small fw-bold" />
                                 Vincent
                             </a>
-
                             <h1 className="text-center" style={{ fontSize: "2.5rem", color: "#333", textTransform: "uppercase", letterSpacing: "2px" }}>
                                 {post.title}
                             </h1>
@@ -131,23 +118,21 @@ function Detail() {
                                     </a>
                                     <p>{post?.profile?.bio || ""}</p>
                                 </div>
-                                <div className="my-4">
-                                    {taggedUsers.length > 0 && (
-                                        <div className="my-4">
-                                            <h5>Tagged Users:</h5>
-                                            <ul className="list-unstyled">
-                                                {taggedUsers.map((user, index) => (
-                                                    <li key={index} className="fw-bold">
-                                                        <i className="fas fa-user text-primary me-2"></i> {user.full_name} ({user.email})
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    )}
-                                </div>
+
+                                {taggedUsers.length > 0 && (
+                                    <div className="my-4">
+                                        <h5>Tagged Users:</h5>
+                                        <ul className="list-unstyled">
+                                            {taggedUsers.map((user, index) => (
+                                                <li key={index} className="fw-bold">
+                                                    <i className="fas fa-user text-primary me-2"></i> {user.full_name} ({user.email})
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                )}
 
                                 <hr className="d-none d-lg-block" />
-
                                 <ul className="list-inline list-unstyled">
                                     <li className="list-inline-item d-lg-block my-lg-2 text-start">
                                         <i className="fas fa-calendar"></i> {Moment(post.date)}
@@ -163,7 +148,7 @@ function Detail() {
                                         {post.view} Views
                                     </li>
                                 </ul>
-                                {/* Tags */}
+
                                 <ul className="list-inline text-primary-hover mt-0 mt-lg-3 text-start">
                                     {tags?.map((tag, index) => (
                                         <li className="list-inline-item" key={index}>
@@ -180,17 +165,29 @@ function Detail() {
                                 </button>
                             </div>
                         </div>
-                        {/* Left sidebar END */}
-                        {/* Main Content START */}
+
+                        {/* Main Content */}
                         <div className="col-lg-10 mb-5">
                             <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-                                <img
-                                    src={post.image}
-                                    className="img-thumbnail"
-                                    alt=""
-                                    style={{ width: 800, height: 800, objectFit: "cover" }}
-                                />
+                                {post.video ? (
+                                    <video
+                                        controls
+                                        style={{ width: 800, height: 800, objectFit: "cover" }}
+                                        className="img-thumbnail"
+                                    >
+                                        <source src={post.video} type="video/mp4" />
+                                        Your browser does not support the video tag.
+                                    </video>
+                                ) : post.image ? (
+                                    <img
+                                        src={post.image}
+                                        className="img-thumbnail"
+                                        alt=""
+                                        style={{ width: 800, height: 800, objectFit: "cover" }}
+                                    />
+                                ) : null}
                             </div>
+
                             <p>{post.description}</p>
 
                             <div>
@@ -207,8 +204,7 @@ function Detail() {
                                     </div>
                                 ))}
                             </div>
-                            {/* Comments END */}
-                            {/* Reply START */}
+
                             <div className="bg-light p-3 rounded">
                                 <h3 className="fw-bold">Leave a comment</h3>
                                 <form className="row g-3 mt-2" onSubmit={handleCreateCommentSubmit}>

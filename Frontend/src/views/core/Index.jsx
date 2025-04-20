@@ -35,7 +35,6 @@ function Index() {
         }
     };
 
-    // Keep your breakpoints as is, unless you want to add more columns
     const breakpointColumns = {
         default: 4,
         1024: 3,
@@ -47,6 +46,12 @@ function Index() {
         selectedCategory === "All"
             ? posts
             : posts.filter((post) => post.category.title === selectedCategory);
+
+    // Function to extract a thumbnail for video (use a placeholder or the first frame of the video)
+    const getThumbnail = (videoUrl) => {
+        // Here you can replace it with a library or API to fetch a real thumbnail, if needed.
+        return `https://img.youtube.com/vi/${videoUrl}/hqdefault.jpg`; // Example for YouTube videos
+    };
 
     return (
         <div>
@@ -73,7 +78,6 @@ function Index() {
 
             {/* Pinterest-Style Masonry Grid Layout */}
             <section className="p-4">
-                {/* You can keep container-fluid or use a narrower container */}
                 <div className="masonry-container">
                     <Masonry
                         breakpointCols={breakpointColumns}
@@ -82,7 +86,16 @@ function Index() {
                     >
                         {filteredPosts.map((p, index) => (
                             <div className="card pinterest-card" key={index}>
-                                <img className="card-img" src={p.image} alt={p.title} />
+                                {/* Check if there's a video */}
+                                {p.video ? (
+                                    <img
+                                        className="card-img"
+                                        src={getThumbnail(p.video)} // Display video thumbnail
+                                        alt={p.title}
+                                    />
+                                ) : (
+                                    <img className="card-img" src={p.image} alt={p.title} />
+                                )}
                                 <div className="card-body">
                                     <h4 className="card-title">
                                         <Link to={`/${p.slug}`} className="btn-link text-reset text-decoration-none">
@@ -107,30 +120,27 @@ function Index() {
             {/* CSS Styles for Masonry Grid and Cards */}
             <style>
                 {`
-                /* A narrower container to make cards smaller */
                 .masonry-container {
                     width: 80%;
-                    margin: 0 auto; /* Center the grid on the page */
+                    margin: 0 auto;
                 }
                 .masonry-grid {
                     display: flex;
                     width: 100%;
                 }
                 .masonry-column {
-                    /* Increase left padding to create bigger gap between columns */
                     padding-left: 24px;
                     background-clip: padding-box;
                 }
-                /* The negative margin is not needed if you use the .masonry-container approach */
 
                 .pinterest-card {
                     background: #fff;
                     border-radius: 16px;
                     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
                     overflow: hidden;
-                    margin-bottom: 24px; /* Increase bottom margin to add gap between rows */
+                    margin-bottom: 24px;
                     transition: transform 0.2s;
-                    width: 100%; /* Make the card fill the column width */
+                    width: 100%;
                 }
                 .pinterest-card:hover {
                     transform: scale(1.05);
@@ -144,7 +154,6 @@ function Index() {
                     padding: 12px;
                 }
 
-                /* Category Navigation */
                 .category-nav {
                     display: flex;
                     gap: 10px;

@@ -42,9 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'django_rest_passwordreset',
     'api',
-
     'rest_framework',
     'rest_framework_simplejwt.token_blacklist',
     'drf_yasg',
@@ -53,11 +52,6 @@ INSTALLED_APPS = [
     'storages',
     'django_ckeditor_5',
 ]
-
-
-
-
-
 
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
@@ -96,10 +90,15 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+         'NAME': 'fyp1',
+        'USER': 'root',
+        'PASSWORD': '',
+        'HOST': 'localhost', 
+        'PORT': '3306',      
     }
 }
+
 
 
 # Password validation
@@ -216,6 +215,17 @@ CORS_ALLOW_HEADERS = [
     "Access-Control-Allow-Origin",
 ]
 
+# email settings 
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST ='smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS=True 
+DEFAULT_FROM_EMAIL ='Vincent<jonesh.rai60@gmail.com>'
+EMAIL_HOST_USER = os.environ.get("EmailHost1")
+EMAIL_HOST_PASSWORD = os.environ.get("EmailPassword1")
+
+print("EMAIL_HOST_USER:", EMAIL_HOST_USER)
+print("EMAIL_HOST_PASSWORD:", EMAIL_HOST_PASSWORD)
 
 
 STRIPE_SECRET_KEY = 'sk_test_51R0fXjGBr8pN7wEJK9Ip4Pi9ONNtXi4oy8DCZ14V0u8BFxrzGRfXwsSepLLtGv2cgaCKlPy4OZAYUzYv1AZtz9oR0082DP3e0g'

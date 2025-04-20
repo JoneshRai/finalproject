@@ -10,7 +10,6 @@ import Swal from "sweetalert2";
 
 function Eventbooking() {
     const [event, setCreateEvent] = useState({
-        image: "",
         title: "",
         description: "",
         category: "",
@@ -20,7 +19,6 @@ function Eventbooking() {
         end_time: "",
         status: "Upcoming",
     });
-    const [imagePreview, setImagePreview] = useState("");
     const [categoryList, setCategoryList] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const userId = useUserData()?.user_id;
@@ -29,7 +27,6 @@ function Eventbooking() {
     const fetchCategory = async () => {
         const response = await apiInstance.get(`post/category/list/`);
         setCategoryList(response.data);
-        console.log(response.data);
     };
 
     useEffect(() => {
@@ -42,32 +39,13 @@ function Eventbooking() {
             [e.target.name]: e.target.value,
         }));
     };
-    
-    const handleFileChange = (event) => {
-        const selectedFile = event.target.files[0];
-        const reader = new FileReader();
-    
-        if (selectedFile) {
-            reader.readAsDataURL(selectedFile);
-            reader.onloadend = () => {
-                setCreateEvent((prevState) => ({
-                    ...prevState,
-                    image: {
-                        file: selectedFile,
-                        preview: reader.result,
-                    },
-                }));
-                setImagePreview(reader.result);
-            };
-        }
-    };
 
     const handleCreateEvent = async (e) => {
         setIsLoading(true);
         e.preventDefault();
     
         // Ensure all required fields are filled
-        if (!event.title || !event.description || !event.image?.file || !event.category || !event.event_date || !event.location || !event.start_time || !event.end_time) {
+        if (!event.title || !event.description || !event.category || !event.event_date || !event.location || !event.start_time || !event.end_time) {
             Toast("error", "All Fields Are Required To Create An Event");
             setIsLoading(false);
             return;
@@ -76,7 +54,6 @@ function Eventbooking() {
         const jsonData = {
             user_id: userId,
             title: event.title,
-            image: event.image.file,
             description: event.description,
             category: event.category,
             event_date: event.event_date,
@@ -90,7 +67,6 @@ function Eventbooking() {
     
         formdata.append("user_id", userId);
         formdata.append("title", event.title);
-        formdata.append("image", event.image.file);
         formdata.append("description", event.description);
         formdata.append("category", event.category);
         formdata.append("event_date", event.event_date);
@@ -105,7 +81,6 @@ function Eventbooking() {
                     "Content-Type": "multipart/form-data",
                 },
             });
-            console.log(response.data);
             setIsLoading(false);
             Swal.fire({
                 icon: "success",
@@ -117,7 +92,6 @@ function Eventbooking() {
             setIsLoading(false);
         }
     };
-    
 
     return (
         <>
@@ -153,22 +127,6 @@ function Eventbooking() {
                                             <h4 className="mb-0">Basic Information</h4>
                                         </div>
                                         <div className="card-body">
-                                            <label htmlFor="eventThumbnail" className="form-label">
-                                                Preview
-                                            </label>
-                                            <img
-                                                style={{ width: "100%", height: "330px", objectFit: "cover", borderRadius: "10px" }}
-                                                className="mb-4"
-                                                src={imagePreview || "https://www.eclosio.ong/wp-content/uploads/2018/08/default.png"}
-                                                alt=""
-                                            />
-                                            <div className="mb-3">
-                                                <label htmlFor="eventThumbnail" className="form-label">
-                                                    Thumbnail
-                                                </label>
-                                                <input onChange={handleFileChange} name="image" id="eventThumbnail" className="form-control" type="file" />
-                                            </div>
-
                                             <div className="mb-3">
                                                 <label className="form-label">Event Title</label>
                                                 <input onChange={handleCreateEventChange} name="title" className="form-control" type="text" placeholder="" />
@@ -179,7 +137,7 @@ function Eventbooking() {
                                                 <select name="category" onChange={handleCreateEventChange} className="form-select">
                                                     <option value="">-------------</option>
                                                     {categoryList?.map((c, index) => (
-                                                        <option value={c?.id}>{c?.title}</option>
+                                                        <option value={c?.id} key={index}>{c?.title}</option>
                                                     ))}
                                                 </select>
                                             </div>
@@ -214,9 +172,7 @@ function Eventbooking() {
                                                 <select onChange={handleCreateEventChange} name="status" className="form-select" value={event.status}>
                                                     <option value="Upcoming">Upcoming</option>
                                                     <option value="Ongoing">Ongoing</option>
-                                                    {/* <option value="Completed">Completed</option> */}
                                                 </select>
-
                                             </div>
                                         </div>
                                     </div>

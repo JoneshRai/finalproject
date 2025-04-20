@@ -76,7 +76,7 @@ const buyFunction = async () => {
 
       if (response.status === 200) {
           // Save the event title and amount in Django
-          await axios.post("http://localhost:8000/create-booking/", {
+          await axios.post( `http://localhost:8000/create-booking/${userId}/`, {
               event_title: selectedEvent.title,
               amount: numPeople * (selectedEvent.price || 100),
           });

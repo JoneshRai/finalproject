@@ -380,6 +380,7 @@ class DashboardPostCreate(generics.CreateAPIView):
         user_id = request.data.get('user_id')
         title = request.data.get('title')
         image = request.data.get('image')
+        video = request.data.get('video')
         description = request.data.get('description')
         tags = request.data.get('tags')
         category_id = request.data.get('category')
@@ -400,6 +401,7 @@ class DashboardPostCreate(generics.CreateAPIView):
             profile=profile,  # Assign the profile to the post
             title=title,
             image=image,
+            video=video,
             description=description,
             tags=tags,
             category=category,
@@ -593,15 +595,26 @@ class MessageListCreate(generics.ListCreateAPIView):
         return Message.objects.all()
 
 class CreateBookingView(APIView):
-    def post(self, request):
+    def post(self, request, *args, **kwargs):
+        # Extract data from the request
         event_title = request.data.get("event_title")
         amount = request.data.get("amount")
+        
+       
+        user_id = self.kwargs['user_id']
+        user = User.objects.get(id=user_id)
 
-        if not event_title or not amount:
-            return Response({"error": "Event title and amount are required"}, status=status.HTTP_400_BAD_REQUEST)
+        # Create the booking with the user
+        booking = Booking.objects.create(
+            event_title=event_title,
+            amount=amount,
+            user=user  # Assign the logged-in user
+        )
 
-        booking = Booking.objects.create(event_title=event_title, amount=amount)
+        # Serialize the booking object
         serializer = BookingSerializer(booking)
+        
+        # Return the created booking data
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
 

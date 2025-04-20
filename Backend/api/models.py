@@ -1,11 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.db.models.signals import post_save
+from django.dispatch import receiver
 from django.utils.html import mark_safe
 from django.utils.text import slugify
 from django.utils import timezone
 from datetime import datetime
-
+from django_rest_passwordreset.signals import reset_password_token_created
+from django.core.mail import EmailMultiAlternatives
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
 from shortuuid.django_fields import ShortUUIDField
 import shortuuid
 from django.conf import settings
@@ -35,6 +39,33 @@ class User(AbstractUser):
     
         super(User, self).save(*args, **kwargs)
 
+# @receiver(reset_password_token_created)
+# def password_reset_token_created(reset_password_token,args,*kwargs):
+#     sitelink="http://localhost:5173/"
+#     token="{}".format(reset_password_token.key)
+#     full_link = str(sitelink)+str("passwordreset/")+str(token)
+    
+#     print(token)
+#     print(full_link)
+
+#     context={
+#         'full_link': full_link,
+#         'email_address': reset_password_token.user.email
+        
+#     }
+    
+#     html_message = render_to_string("back/email.html", context=context)
+#     plain_message = strip_tags(html_message)
+    
+#     msg= EmailMultiAlternatives(
+#         subject="Request for resetting password for {title}".format(title=reset_password_token.user.email),
+#         body = plain_message,
+#         from_email =settings.DEFAULT_FROM_EMAIL,
+#         to=[reset_password_token.user.email]
+#     )
+
+#     msg.attach_alternative(html_message, "text/html")
+#     msg.send()
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -104,6 +135,7 @@ class Post(models.Model):
     profile = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=100, default="Untitled Event")
     image = models.FileField(upload_to="image", null=True, blank=True)
+    video = models.FileField(upload_to="videos", null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     tags = models.CharField(max_length=100)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='posts')
@@ -193,7 +225,7 @@ class Message(models.Model):
 
 
 class Booking(models.Model):
-    
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     event_title = models.CharField(max_length=255)  # Store the event title
     amount = models.DecimalField(max_digits=10, decimal_places=2)  # Ensure amount is defined
     created_at = models.DateField(auto_now_add=True)

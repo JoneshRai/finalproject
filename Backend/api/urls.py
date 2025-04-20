@@ -19,7 +19,7 @@ urlpatterns = [
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('register/', RegisterViewset.as_view(), name='auth_register'),
     path('profile/<user_id>/', ProfileView.as_view(), name='user_profile'),
-    path('password-reset/<email>/', PasswordEmailVerify.as_view(), name='password_reset'),
+    path("passwordreset/", include("django_rest_passwordreset.urls", namespace="password_reset")),
     path('password-change/', PasswordChangeView.as_view(), name='password_reset'),
 
     path('', views.home, name="home"),
@@ -29,7 +29,7 @@ urlpatterns = [
     path('getMessages/<str:room>/', views.getMessages, name="getMessages"),
  
 
-    path('create-booking/', CreateBookingView.as_view(), name='create-booking'),
+    path('create-booking/<int:user_id>/', CreateBookingView.as_view(), name='create-booking'),
     
     path('users/list/', list_users, name='list_users'),
     path('messages', MessageAPIView.as_view()),
